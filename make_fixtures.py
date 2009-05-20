@@ -134,10 +134,11 @@ class FixtureMaker(object):
                 if self.use_all or not field.blank:
                     app_model = self.get_app_models(field.rel.to.__name__)
                     self.app_models.append(app_model[0])
+                    field_name = field.get_attname()
                     if hasattr(field, "m2m_reverse_name"):
-                        fields[field.get_attname()] = [1]
+                        fields[field_name] = [1]
                     else:
-                        fields[field.get_attname()] = 1
+                        fields[field_name[:-3]] = 1
             else:
                 if self.use_all or not field.blank:
                     default = self.get_default_value(field)
