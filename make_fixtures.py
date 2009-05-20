@@ -54,15 +54,15 @@ class FixtureMaker(object):
         Example Usage:
             ./make_fixture.py (-a)? (-f output.json)? <model_name> (<id>)?
     """
-    
+
     def __init__(self, use_all=False, format="json"):
         self.use_all = use_all
         self._fixtures = []
-        
+
     @property
     def fixtures(self):
         return simplejson.dumps(self._fixtures, indent=4, cls=DjangoJSONEncoder)
-    
+
     def get_app_models(self, model_names):
         """
             Given a model name or a list of model names, return a tuple of
@@ -77,25 +77,25 @@ class FixtureMaker(object):
                 if model is not None:
                     app_models.append((app_label.split(".")[-1], model))
         return app_models
-    
-    def get_default_value(self, field): 
+
+    def get_default_value(self, field):
         """
             Given a field instance, return the default value based on 
             the field type.  If the field is a subclass of a built in
             django field type, it will return the defualt value for
             the django field type.
-        """       
+        """
         try:
             if field.default != NOT_PROVIDED:
                 if callable(field.default):
                     value = field.default()
                 else:
-                    value = field.default                
+                    value = field.default
                 return value
             value = FIELD_TYPE_DEFAULTS[field.get_internal_type()]
         except KeyError:
             if len(field.__class__.__bases__) > 0:
-                value = self.get_default_value(field.__class__.__bases__[0])        
+                value = self.get_default_value(field.__class__.__bases__[0])
             else:
                 return None
         except AttributeError:
@@ -115,27 +115,26 @@ class FixtureMaker(object):
     def build_fixture(self, app_model):
         """
             Given an (app_label, model_instance) tuple, build fixtures
-            with default values and traverse the related model 
+            with default values and traverse the related model
             relationships to build the required models
         """
-        (app_label, model) = app_model       
+        (app_label, model) = app_model
         instance = { 
-            "pk": self.get_default_pk(model), 
+            "pk": self.get_default_pk(model),
             "model": "%s.%s" % (app_label, model.__name__),
             "fields": {},
         }
         fields = {}
         for field in model._meta.fields + model._meta.many_to_many:
             if field.primary_key:
-                continue                                    
+                continue
             if hasattr(field, "rel") and hasattr(field.rel, "to"):
                 if field.rel.to in [m[1] for m in self.app_models]:
                     continue
                 if self.use_all or not field.blank:
                     app_model = self.get_app_models(field.rel.to.__name__)
                     self.app_models.append(app_model[0])
-                    self.build_fixture(app_model[0])
-                    if hasattr(field, "m2m_reverse_name"):                
+                    if hasattr(field, "m2m_reverse_name"):
                         fields[field.get_attname()] = [1]
                     else:
                         fields[field.get_attname()] = 1
@@ -143,11 +142,10 @@ class FixtureMaker(object):
                 if self.use_all or not field.blank:
                     default = self.get_default_value(field)
                     if default is not None:
-                        fields[field.get_attname()] = default                         
+                        fields[field.get_attname()] = default
         instance['fields'] = fields
-        if instance not in self._fixtures:
-            self._fixtures.append(instance)
-                    
+        self._fixtures.append(instance)
+
     def build_fixtures(self, model_names):
         """
             Go though all the model names and build the fixture or the model
@@ -166,7 +164,7 @@ if __name__=="__main__":
     if args > 0:    
         maker.build_fixtures(args)
         if options.filename is None:
-            print maker.fixtures            
+            print maker.fixtures
         else:
             f = open(options.filename, "w")
             f.write(maker.fixtures)
