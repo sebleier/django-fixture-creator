@@ -68,7 +68,7 @@ class FixtureMaker(object):
     def get_default_pk(self, model):
         """
             Go through the model instance and find the field that is
-            the primary key.
+            the primary key and return its default value.
         """
         for field in model._meta.fields:
             if field.primary_key:
@@ -77,8 +77,7 @@ class FixtureMaker(object):
 
     def get_models(self, model_names):
         """
-            Given a model name or a list of model names, return a tuple of
-            the app label and a model instance.
+            Given a model name or a list of model names, return a list of model instances.
         """
         models = []
         if isinstance(model_names, str):
@@ -93,9 +92,7 @@ class FixtureMaker(object):
     def get_default_value(self, field):
         """
             Given a field instance, return the default value based on
-            the field type.  If the field is a subclass of a built in
-            django field type, it will return the defualt value for
-            the django field type.
+            the field type.
 
             If the model was declared with a default value, return that
             value rather than a sensible value specified in
@@ -150,7 +147,7 @@ class FixtureMaker(object):
 
     def build_fixtures(self, model_names):
         """
-            Go though all the model names and build the fixture or the model
+            Go though all the model names and build the fixture of the model
             and related models.
         """
         self.models = self.get_models(args)
