@@ -131,11 +131,11 @@ class FixtureMaker(object):
             if field.rel is not None:
                 if not self.use_all_fields and field.null and field.blank:
                     continue
-                if field.rel.to in self.models:
-                    if isinstance(field.rel, ManyToManyRel):
-                        fields[field.name] = [1]
-                    else:
-                        fields[field.name] = 1
+                if isinstance(field.rel, ManyToManyRel):
+                    fields[field.name] = [1]
+                else:
+                    fields[field.name] = 1
+                if field.rel.to in self.models:                    
                     continue
                 self.models.append(field.rel.to)
             elif self.use_all_fields or not field.blank or not field.null:
